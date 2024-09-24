@@ -43,45 +43,34 @@ import ForegroundActivityIndicator // パッケージをインポート
 import SwiftUI
 
 struct ContentView: View {
-    @State var isShowingActivityIndicator = false // アクティビティインジケーターの表示状態
+    @State var isVisible = false// アクティビティインジケーターの表示状態
 
     var body: some View {
         TabView {
             NavigationView {
-                VStack(spacing: 20) {
+                VStack {
                     Image(systemName: "1.circle.fill")
                         .resizable()
                         .frame(width: 100, height: 100)
-
-                    Button(action: {
-                        isShowingActivityIndicator = true
-
-                        // 3秒後に非表示
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                            isShowingActivityIndicator = false
-                        }
-                    }, label: {
-                        Text("表示")
-                            .padding(.vertical, 5)
-                            .padding(.horizontal, 40)
-                            .foregroundColor(.white)
-                            .background(Color.blue)
-                            .cornerRadius(5)
-                    })
                 }
-                .activityIndicator(isVisible: $isShowingActivityIndicator, backgroundColor: .gray.withAlphaComponent(0.5), indicatorColor: .white) // モディファイアを適用
                 .navigationTitle("画面1")
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbarBackground(Color.blue, for: .navigationBar)
                 .toolbarColorScheme(.dark, for: .navigationBar)
                 .navigationBarTitleDisplayMode(.inline)
+                .activityIndicator(isVisible: isVisible,
+                                backgroundColor: .gray.withAlphaComponent(0.5),
+                                indicatorColor: .white)
+                .onAppear {
+                    isVisible = true
+                }
             }
             .tag(0)
             .tabItem { Label("One", systemImage: "1.circle") }
 
             NavigationView {
                 VStack {
-                    Image(systemName: "2.circle.fill")
+                    Image(systemName: "2.circle")
                         .resizable()
                         .frame(width: 100, height: 100)
                 }
@@ -97,6 +86,6 @@ struct ContentView: View {
 
 | パラメーター | 型 | 説明 | デフォルト
 | --- | --- | --- | ---
-| `isVisible` | `Binding<Bool>` | アクティビティインジケーターの表示状態を管理する変数 | -
+| `isVisible` | `Bool` | アクティビティインジケーターの表示状態 | -
 | `backgroundColor` | `UIColor` | オーバーレイの背景色 | `.clear`
 | `indicatorColor` | `UIColor` | アクティビティインジケーターの色 | `.darkGray`
