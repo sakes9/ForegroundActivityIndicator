@@ -7,17 +7,23 @@ import UIKit
 // MARK: - アクティビティーインジケーター
 
 struct UIActivityIndicatorModifier: ViewModifier {
-    @Binding var isVisible: Bool // アクティビティインジケーターの表示/非表示を制御するバインディング
-    let backgroundColor: UIColor // 背景色と透明度
-    let indicatorColor: UIColor // インジケーターの色
+    private var isVisible: Bool // アクティビティインジケーターの表示フラグ
+    private let backgroundColor: UIColor // 背景色
+    private let indicatorColor: UIColor // インジケーターの色
+
+    /// イニシャライザ
+    /// - Parameters:
+    ///   - isVisible: インジケーター表示フラグ
+    ///   - backgroundColor: 背景色
+    ///   - indicatorColor: インジケーター色
+    init(isVisible: Bool, backgroundColor: UIColor, indicatorColor: UIColor) {
+        self.isVisible = isVisible
+        self.backgroundColor = backgroundColor
+        self.indicatorColor = indicatorColor
+    }
 
     func body(content: Content) -> some View {
         content
-            .onAppear {
-                if isVisible {
-                    showActivityIndicator()
-                }
-            }
             .onChange(of: isVisible) {
                 if isVisible {
                     showActivityIndicator()
@@ -111,11 +117,13 @@ class UIActivityIndicatorOverlayContainerView: UIView {}
 public extension View {
     /// アクティビティインジケーターをオーバーレイ表示するカスタムモディファイア
     /// - Parameters:
-    ///   - isVisible: アクティビティインジケーターの表示/非表示を制御するバインディング
+    ///   - isVisible: アクティビティインジケーターの表示フラグ
     ///   - backgroundColor: 背景色と透明度を指定
     ///   - indicatorColor: インジケーターの色を指定
     /// - Returns: 修正されたビュー
-    func activityIndicator(isVisible: Binding<Bool>, backgroundColor: UIColor = UIColor.clear, indicatorColor: UIColor = .darkGray) -> some View {
+    func activityIndicator(isVisible: Bool,
+                           backgroundColor: UIColor = UIColor.clear,
+                           indicatorColor: UIColor = .darkGray) -> some View {
         modifier(UIActivityIndicatorModifier(isVisible: isVisible, backgroundColor: backgroundColor, indicatorColor: indicatorColor))
     }
 }
@@ -125,7 +133,9 @@ public extension View {
 #if DEBUG
 
 #Preview {
-    TabView {
+    @Previewable @State var isVisible = false
+
+    return TabView {
         NavigationView {
             VStack {
                 Image(systemName: "1.circle.fill")
@@ -137,7 +147,12 @@ public extension View {
             .toolbarBackground(Color.blue, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
-            .activityIndicator(isVisible: .constant(true), backgroundColor: .gray.withAlphaComponent(0.5), indicatorColor: .white)
+            .activityIndicator(isVisible: isVisible,
+                               backgroundColor: .gray.withAlphaComponent(0.5),
+                               indicatorColor: .white)
+            .onAppear {
+                isVisible = true
+            }
         }
         .tag(0)
         .tabItem { Label("One", systemImage: "1.circle") }
