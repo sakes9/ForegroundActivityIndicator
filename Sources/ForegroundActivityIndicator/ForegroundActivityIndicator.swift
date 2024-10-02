@@ -1,6 +1,7 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
+import NVActivityIndicatorView
 import SwiftUI
 import UIKit
 
@@ -8,16 +9,19 @@ import UIKit
 
 struct UIActivityIndicatorModifier: ViewModifier {
     private var isVisible: Bool // アクティビティインジケーターの表示フラグ
+    private let type: NVActivityIndicatorType // スタイル
     private let backgroundColor: UIColor // 背景色
     private let indicatorColor: UIColor // インジケーターの色
 
     /// イニシャライザ
     /// - Parameters:
     ///   - isVisible: インジケーター表示フラグ
+    ///   - type: タイプ
     ///   - backgroundColor: 背景色
     ///   - indicatorColor: インジケーター色
-    init(isVisible: Bool, backgroundColor: UIColor, indicatorColor: UIColor) {
+    init(isVisible: Bool, type: NVActivityIndicatorType, backgroundColor: UIColor, indicatorColor: UIColor) {
         self.isVisible = isVisible
+        self.type = type
         self.backgroundColor = backgroundColor
         self.indicatorColor = indicatorColor
     }
@@ -55,8 +59,9 @@ struct UIActivityIndicatorModifier: ViewModifier {
         containerView.isUserInteractionEnabled = true // ユーザーインタラクションをブロック
 
         // アクティビティインジケーターを作成
-        let activityIndicator = UIActivityIndicatorView(style: .large)
-        activityIndicator.color = indicatorColor // 外部から設定されたインジケーターの色を適用
+        let activityIndicator = NVActivityIndicatorView(frame: .init(x: 0, y: 0, width: 50, height: 50),
+                                                        type: type,
+                                                        color: indicatorColor)
         activityIndicator.startAnimating()
 
         // アクティビティインジケーターの位置を設定
@@ -122,9 +127,13 @@ public extension View {
     ///   - indicatorColor: インジケーターの色を指定
     /// - Returns: 修正されたビュー
     func activityIndicator(isVisible: Bool,
+                           type: NVActivityIndicatorType = .lineSpinFadeLoader,
                            backgroundColor: UIColor = UIColor.clear,
                            indicatorColor: UIColor = .darkGray) -> some View {
-        modifier(UIActivityIndicatorModifier(isVisible: isVisible, backgroundColor: backgroundColor, indicatorColor: indicatorColor))
+        modifier(UIActivityIndicatorModifier(isVisible: isVisible,
+                                             type: type,
+                                             backgroundColor: backgroundColor,
+                                             indicatorColor: indicatorColor))
     }
 }
 
@@ -148,6 +157,7 @@ public extension View {
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
             .activityIndicator(isVisible: isVisible,
+                               type: .ballSpinFadeLoader,
                                backgroundColor: .gray.withAlphaComponent(0.5),
                                indicatorColor: .white)
             .onAppear {
