@@ -10,20 +10,26 @@ import UIKit
 struct UIActivityIndicatorModifier: ViewModifier {
     private var isVisible: Bool // アクティビティインジケーターの表示フラグ
     private let type: NVActivityIndicatorType // スタイル
+    private let text: String? // 表示するテキスト
     private let backgroundColor: UIColor // 背景色
-    private let indicatorColor: UIColor // インジケーターの色
+    private let foregroundColor: UIColor // インジケーターとテキストの色
 
     /// イニシャライザ
     /// - Parameters:
     ///   - isVisible: インジケーター表示フラグ
     ///   - type: タイプ
+    ///   - text: インジケーター下の表示テキスト
     ///   - backgroundColor: 背景色
-    ///   - indicatorColor: インジケーター色
-    init(isVisible: Bool, type: NVActivityIndicatorType, backgroundColor: UIColor, indicatorColor: UIColor) {
+    ///   - foregroundColor: インジケーターとテキストの色
+
+    init(
+        isVisible: Bool, type: NVActivityIndicatorType, text: String?, backgroundColor: UIColor,
+        foregroundColor: UIColor) {
         self.isVisible = isVisible
         self.type = type
+        self.text = text
         self.backgroundColor = backgroundColor
-        self.indicatorColor = indicatorColor
+        self.foregroundColor = foregroundColor
     }
 
     func body(content: Content) -> some View {
@@ -41,7 +47,9 @@ struct UIActivityIndicatorModifier: ViewModifier {
     /// `isVisible`が`true`の場合に呼び出され、アクティビティインジケーターを表示します。
     private func showActivityIndicator() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootViewController = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+              let rootViewController = windowScene.windows.first(where: { $0.isKeyWindow })?
+              .rootViewController
+        else {
             return
         }
 
@@ -49,19 +57,23 @@ struct UIActivityIndicatorModifier: ViewModifier {
         let topViewController = findTopViewController(rootViewController)
 
         // 既存のコンテナビューがある場合は削除する
-        if let existingContainerView = topViewController.view.subviews.first(where: { $0 is UIActivityIndicatorOverlayContainerView }) {
+        if let existingContainerView = topViewController.view.subviews.first(where: {
+            $0 is UIActivityIndicatorOverlayContainerView
+        }) {
             existingContainerView.removeFromSuperview()
         }
 
         // コンテナビューを作成
-        let containerView = UIActivityIndicatorOverlayContainerView(frame: topViewController.view.bounds)
+        let containerView = UIActivityIndicatorOverlayContainerView(
+            frame: topViewController.view.bounds)
         containerView.backgroundColor = backgroundColor // 外部から設定された背景色と透明度を適用
         containerView.isUserInteractionEnabled = true // ユーザーインタラクションをブロック
 
         // アクティビティインジケーターを作成
-        let activityIndicator = NVActivityIndicatorView(frame: .init(x: 0, y: 0, width: 50, height: 50),
-                                                        type: type,
-                                                        color: indicatorColor)
+        let activityIndicator = NVActivityIndicatorView(
+            frame: .init(x: 0, y: 0, width: 50, height: 50),
+            type: type,
+            color: foregroundColor)
         activityIndicator.startAnimating()
 
         // アクティビティインジケーターの位置を設定
@@ -70,7 +82,21 @@ struct UIActivityIndicatorModifier: ViewModifier {
         // コンテナビューにアクティビティインジケーターを追加
         containerView.addSubview(activityIndicator)
 
-        // トップビューコントローラのビューにコンテナビューを追加
+        // テキストラベルを作成
+        if text != nil {
+            let label = UILabel()
+            label.text = text
+            label.textColor = foregroundColor
+            label.textAlignment = .center
+            label.sizeToFit()
+
+            // ラベルの位置を設定（インジケーターの下に配置）
+            label.center = CGPoint(x: containerView.center.x, y: containerView.center.y + 40)
+
+            // コンテナビューにラベルを追加
+            containerView.addSubview(label)
+        }
+
         topViewController.view.addSubview(containerView)
     }
 
@@ -78,14 +104,18 @@ struct UIActivityIndicatorModifier: ViewModifier {
     /// `isVisible`が`false`の場合に呼び出され、アクティビティインジケーターを削除する。
     private func removeActivityIndicator() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootViewController = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+              let rootViewController = windowScene.windows.first(where: { $0.isKeyWindow })?
+              .rootViewController
+        else {
             return
         }
 
         let topViewController = findTopViewController(rootViewController)
 
         // コンテナビューを削除
-        if let containerView = topViewController.view.subviews.first(where: { $0 is UIActivityIndicatorOverlayContainerView }) {
+        if let containerView = topViewController.view.subviews.first(where: {
+            $0 is UIActivityIndicatorOverlayContainerView
+        }) {
             containerView.removeFromSuperview()
         }
     }
@@ -123,17 +153,24 @@ public extension View {
     /// アクティビティインジケーターをオーバーレイ表示するカスタムモディファイア
     /// - Parameters:
     ///   - isVisible: アクティビティインジケーターの表示フラグ
+    ///   - type: インジケーターのタイプ
+    ///   - text: インジケーター下に表示するテキスト
     ///   - backgroundColor: 背景色と透明度を指定
     ///   - indicatorColor: インジケーターの色を指定
     /// - Returns: 修正されたビュー
-    func activityIndicator(isVisible: Bool,
-                           type: NVActivityIndicatorType = .lineSpinFadeLoader,
-                           backgroundColor: UIColor = UIColor.clear,
-                           indicatorColor: UIColor = .darkGray) -> some View {
-        modifier(UIActivityIndicatorModifier(isVisible: isVisible,
-                                             type: type,
-                                             backgroundColor: backgroundColor,
-                                             indicatorColor: indicatorColor))
+    func activityIndicator(
+        isVisible: Bool,
+        type: NVActivityIndicatorType = .lineSpinFadeLoader,
+        text: String? = nil,
+        backgroundColor: UIColor = UIColor.clear,
+        foregroundColor: UIColor = .darkGray) -> some View {
+        modifier(
+            UIActivityIndicatorModifier(
+                isVisible: isVisible,
+                type: type,
+                text: text,
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor))
     }
 }
 
@@ -156,10 +193,12 @@ public extension View {
             .toolbarBackground(Color.blue, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
-            .activityIndicator(isVisible: isVisible,
-                               type: .ballSpinFadeLoader,
-                               backgroundColor: .gray.withAlphaComponent(0.5),
-                               indicatorColor: .white)
+            .activityIndicator(
+                isVisible: isVisible,
+                type: .ballSpinFadeLoader,
+                text: "ローディング...",
+                backgroundColor: .gray.withAlphaComponent(0.5),
+                foregroundColor: .white)
             .onAppear {
                 isVisible = true
             }
