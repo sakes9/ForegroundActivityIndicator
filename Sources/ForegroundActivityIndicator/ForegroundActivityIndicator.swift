@@ -163,7 +163,7 @@ public extension View {
         type: NVActivityIndicatorType = .lineSpinFadeLoader,
         text: String? = nil,
         backgroundColor: UIColor = UIColor.clear,
-        foregroundColor: UIColor = .darkGray) -> some View {
+        foregroundColor: UIColor = .gray) -> some View {
         modifier(
             UIActivityIndicatorModifier(
                 isVisible: isVisible,
@@ -178,44 +178,44 @@ public extension View {
 
 #if DEBUG
 
-#Preview {
-    @Previewable @State var isVisible = false
+    #Preview {
+        @Previewable @State var isVisible = false
 
-    return TabView {
-        NavigationView {
-            VStack {
-                Image(systemName: "1.circle.fill")
-                    .resizable()
-                    .frame(width: 100, height: 100)
+        return TabView {
+            NavigationView {
+                VStack {
+                    Image(systemName: "1.circle.fill")
+                        .resizable()
+                        .frame(width: 100, height: 100)
+                }
+                .navigationTitle("画面1")
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarBackground(Color.blue, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+                .navigationBarTitleDisplayMode(.inline)
+                .activityIndicator(
+                    isVisible: isVisible,
+                    type: .ballSpinFadeLoader,
+                    text: "ローディング...",
+                    backgroundColor: .gray.withAlphaComponent(0.5),
+                    foregroundColor: .white)
+                .onAppear {
+                    isVisible = true
+                }
             }
-            .navigationTitle("画面1")
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color.blue, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .navigationBarTitleDisplayMode(.inline)
-            .activityIndicator(
-                isVisible: isVisible,
-                type: .ballSpinFadeLoader,
-                text: "ローディング...",
-                backgroundColor: .gray.withAlphaComponent(0.5),
-                foregroundColor: .white)
-            .onAppear {
-                isVisible = true
-            }
-        }
-        .tag(0)
-        .tabItem { Label("One", systemImage: "1.circle") }
+            .tag(0)
+            .tabItem { Label("One", systemImage: "1.circle") }
 
-        NavigationView {
-            VStack {
-                Image(systemName: "2.circle")
-                    .resizable()
-                    .frame(width: 100, height: 100)
+            NavigationView {
+                VStack {
+                    Image(systemName: "2.circle")
+                        .resizable()
+                        .frame(width: 100, height: 100)
+                }
             }
+            .tag(1)
+            .tabItem { Label("Two", systemImage: "2.circle") }
         }
-        .tag(1)
-        .tabItem { Label("Two", systemImage: "2.circle") }
     }
-}
 
 #endif
