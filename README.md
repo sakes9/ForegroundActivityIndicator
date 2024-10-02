@@ -34,6 +34,9 @@ dependencies: [
 )
 ```
 
+ForegroundActivityIndicator は、アクティビティインジケーターのアニメーションに [NVActivityIndicatorView](https://github.com/ninjaprox/NVActivityIndicatorView) を使用しています。
+NVActivityIndicatorView はこのパッケージの依存関係として既に含まれているため、別途インストールする必要はありません。
+
 ## 使い方
 
 ForegroundActivityIndicator を使用するには、`ForegroundActivityIndicator` モディファイアをビューに適用します。
@@ -58,9 +61,12 @@ struct ContentView: View {
                 .toolbarBackground(Color.blue, for: .navigationBar)
                 .toolbarColorScheme(.dark, for: .navigationBar)
                 .navigationBarTitleDisplayMode(.inline)
-                .activityIndicator(isVisible: isVisible,
-                                backgroundColor: .gray.withAlphaComponent(0.5),
-                                indicatorColor: .white)
+                .activityIndicator(
+                    isVisible: isVisible,
+                    type: .ballSpinFadeLoader,
+                    text: "ローディング...",
+                    backgroundColor: .gray.withAlphaComponent(0.5),
+                    foregroundColor: .white)
                 .onAppear {
                     isVisible = true
                 }
@@ -87,5 +93,7 @@ struct ContentView: View {
 | パラメーター | 型 | 説明 | デフォルト
 | --- | --- | --- | ---
 | `isVisible` | `Bool` | アクティビティインジケーターの表示状態 | -
-| `backgroundColor` | `UIColor` | オーバーレイの背景色 | `.clear`
-| `indicatorColor` | `UIColor` | アクティビティインジケーターの色 | `.darkGray`
+| `type` | `NVActivityIndicatorType` | アクティビティインジケーターの種類 | `NVActivityIndicatorType.lineSpinFadeLoader`
+| `text` | `String?` | アクティビティインジケーターの下に表示するテキスト | `nil`
+| `backgroundColor` | `UIColor` | オーバーレイの背景色 | `UIColor.clear`
+| `indicatorColor` | `UIColor` | アクティビティインジケーターの色 | `UIColor.gray`
