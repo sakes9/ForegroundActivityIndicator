@@ -64,6 +64,7 @@ struct UIActivityIndicatorModifier: ViewModifier {
             frame: window.bounds)
         containerView.backgroundColor = backgroundColor // 外部から設定された背景色と透明度を適用
         containerView.isUserInteractionEnabled = true // ユーザーインタラクションをブロック
+        containerView.autoresizingMask = [.flexibleWidth, .flexibleHeight] // デバイス回転時に自動調整
 
         // アクティビティインジケーターを作成
         let activityIndicator = NVActivityIndicatorView(
@@ -74,6 +75,7 @@ struct UIActivityIndicatorModifier: ViewModifier {
 
         // アクティビティインジケーターの位置を設定
         activityIndicator.center = containerView.center
+        activityIndicator.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin] // 中央配置を維持
 
         // コンテナビューにアクティビティインジケーターを追加
         containerView.addSubview(activityIndicator)
@@ -88,6 +90,7 @@ struct UIActivityIndicatorModifier: ViewModifier {
 
             // ラベルの位置を設定（インジケーターの下に配置）
             label.center = CGPoint(x: containerView.center.x, y: containerView.center.y + 40)
+            label.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin] // 中央配置を維持
 
             // コンテナビューにラベルを追加
             containerView.addSubview(label)
