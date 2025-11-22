@@ -47,17 +47,13 @@ struct UIActivityIndicatorModifier: ViewModifier {
     /// `isVisible`が`true`の場合に呼び出され、アクティビティインジケーターを表示します。
     private func showActivityIndicator() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootViewController = windowScene.windows.first(where: { $0.isKeyWindow })?
-              .rootViewController
+              let window = windowScene.windows.first(where: { $0.isKeyWindow })
         else {
             return
         }
 
-        // 最前面のビューコントローラを見つける
-        let topViewController = findTopViewController(rootViewController)
-
         // 既存のコンテナビューがある場合は削除する
-        if let existingContainerView = topViewController.view.subviews.first(where: {
+        if let existingContainerView = window.subviews.first(where: {
             $0 is UIActivityIndicatorOverlayContainerView
         }) {
             existingContainerView.removeFromSuperview()
@@ -65,7 +61,7 @@ struct UIActivityIndicatorModifier: ViewModifier {
 
         // コンテナビューを作成
         let containerView = UIActivityIndicatorOverlayContainerView(
-            frame: topViewController.view.bounds)
+            frame: window.bounds)
         containerView.backgroundColor = backgroundColor // 外部から設定された背景色と透明度を適用
         containerView.isUserInteractionEnabled = true // ユーザーインタラクションをブロック
 
@@ -97,49 +93,24 @@ struct UIActivityIndicatorModifier: ViewModifier {
             containerView.addSubview(label)
         }
 
-        topViewController.view.addSubview(containerView)
+        window.addSubview(containerView)
     }
 
     /// アクティビティインジケーターを削除するメソッド
     /// `isVisible`が`false`の場合に呼び出され、アクティビティインジケーターを削除する。
     private func removeActivityIndicator() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootViewController = windowScene.windows.first(where: { $0.isKeyWindow })?
-              .rootViewController
+              let window = windowScene.windows.first(where: { $0.isKeyWindow })
         else {
             return
         }
 
-        let topViewController = findTopViewController(rootViewController)
-
         // コンテナビューを削除
-        if let containerView = topViewController.view.subviews.first(where: {
+        if let containerView = window.subviews.first(where: {
             $0 is UIActivityIndicatorOverlayContainerView
         }) {
             containerView.removeFromSuperview()
         }
-    }
-
-    /// 最前面のビューコントローラを見つけるヘルパーメソッド
-    /// - Parameter rootViewController: ルートビューコントローラ
-    /// - Returns: 最前面のビューコントローラ
-    private func findTopViewController(_ rootViewController: UIViewController) -> UIViewController {
-        // プレゼンテッドビューコントローラがある場合は再帰的に呼び出す
-        if let presentedViewController = rootViewController.presentedViewController {
-            return findTopViewController(presentedViewController)
-        }
-
-        // ナビゲーションコントローラーがある場合は、最後にプッシュされたビューコントローラを返す
-        if let navigationController = rootViewController as? UINavigationController {
-            return navigationController.visibleViewController ?? navigationController
-        }
-
-        // タブバーコントローラーがある場合は、選択されているビューコントローラを返す
-        if let tabBarController = rootViewController as? UITabBarController {
-            return tabBarController.selectedViewController ?? tabBarController
-        }
-
-        return rootViewController
     }
 }
 
