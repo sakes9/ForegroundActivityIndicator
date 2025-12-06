@@ -34,20 +34,12 @@ struct UIActivityIndicatorModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onAppear {
-                if isVisible {
-                    showActivityIndicator()
-                }
-            }
             .onChange(of: isVisible) {
                 if isVisible {
                     showActivityIndicator()
                 } else {
                     removeActivityIndicator()
                 }
-            }
-            .onDisappear {
-                removeActivityIndicator()
             }
     }
 
