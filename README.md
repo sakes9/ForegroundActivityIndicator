@@ -13,6 +13,7 @@
 ## 機能
 
 - アクティビティインジケーターの表示/非表示の切り替え
+- Lottieアニメーションの表示/非表示の切り替え
 - オーバーレイの表示によるユーザーの操作制限
 
 ## インストール
@@ -34,8 +35,10 @@ dependencies: [
 )
 ```
 
-ForegroundActivityIndicator は、アクティビティインジケーターのアニメーションに [NVActivityIndicatorView](https://github.com/ninjaprox/NVActivityIndicatorView) を使用しています。
-NVActivityIndicatorView はこのパッケージの依存関係として既に含まれているため、別途インストールする必要はありません。
+ForegroundActivityIndicator は、以下のライブラリを使用しています（パッケージの依存関係として既に含まれているため、別途インストールする必要はありません）。
+
+- [NVActivityIndicatorView](https://github.com/ninjaprox/NVActivityIndicatorView) - アクティビティインジケーターのアニメーション
+- [Lottie](https://github.com/airbnb/lottie-ios) - Lottieアニメーションの表示
 
 ## 使い方
 
@@ -96,4 +99,47 @@ struct ContentView: View {
 | `type` | `NVActivityIndicatorType` | アクティビティインジケーターの種類 | `NVActivityIndicatorType.lineSpinFadeLoader`
 | `text` | `String?` | アクティビティインジケーターの下に表示するテキスト | `nil`
 | `backgroundColor` | `UIColor` | オーバーレイの背景色 | `UIColor.clear`
-| `indicatorColor` | `UIColor` | アクティビティインジケーターの色 | `UIColor.gray`
+| `foregroundColor` | `UIColor` | インジケーターとテキストの色 | `UIColor.gray`
+
+## Lottieアニメーションの使い方
+
+Lottieアニメーションを使用してインジケーターを表示することもできます。
+
+```swift
+import ForegroundActivityIndicator
+import SwiftUI
+
+struct ContentView: View {
+    @State var isVisible = false
+
+    var body: some View {
+        VStack {
+            Image(systemName: "1.circle.fill")
+                .resizable()
+                .frame(width: 100, height: 100)
+        }
+        .lottieIndicator(
+            isVisible: isVisible,
+            fileName: "loading_animation",
+            size: CGSize(width: 100, height: 100),
+            text: "ローディング...",
+            backgroundColor: .gray.withAlphaComponent(0.5),
+            textColor: .white
+        )
+        .onAppear {
+            isVisible = true
+        }
+    }
+}
+```
+
+### Lottieパラメーター
+
+| パラメーター | 型 | 説明 | デフォルト
+| --- | --- | --- | ---
+| `isVisible` | `Bool` | インジケーターの表示状態 | -
+| `fileName` | `String` | Lottieファイル名（拡張子なし） | -
+| `size` | `CGSize` | アニメーションのサイズ | `CGSize(width: 100, height: 100)`
+| `text` | `String?` | インジケーターの下に表示するテキスト | `nil`
+| `backgroundColor` | `UIColor` | オーバーレイの背景色 | `UIColor.clear`
+| `textColor` | `UIColor` | テキストの色 | `UIColor.gray`

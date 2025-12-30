@@ -1,24 +1,8 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-
 import NVActivityIndicatorView
 import SwiftUI
 import UIKit
 
-// MARK: - コンテナビュー
-
-private class IndicatorOverlayContainerView: UIView {}
-
-// MARK: - 純粋関数
-
-private func getKeyWindow() -> UIWindow? {
-    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-          let window = windowScene.windows.first(where: { $0.isKeyWindow })
-    else {
-        return nil
-    }
-    return window
-}
+// MARK: - インジケーター生成
 
 private func createNVActivityIndicatorView(
     type: NVActivityIndicatorType,
@@ -31,43 +15,6 @@ private func createNVActivityIndicatorView(
     )
     indicator.startAnimating()
     return indicator
-}
-
-private func createContainerView(
-    frame: CGRect,
-    indicatorView: UIView,
-    labelOffset: CGFloat,
-    text: String?,
-    textColor: UIColor,
-    backgroundColor: UIColor
-) -> IndicatorOverlayContainerView {
-    let containerView = IndicatorOverlayContainerView(frame: frame)
-    containerView.backgroundColor = backgroundColor
-    containerView.isUserInteractionEnabled = true
-    containerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-
-    indicatorView.center = containerView.center
-    indicatorView.autoresizingMask = [
-        .flexibleLeftMargin, .flexibleRightMargin,
-        .flexibleTopMargin, .flexibleBottomMargin
-    ]
-    containerView.addSubview(indicatorView)
-
-    if let text {
-        let label = UILabel()
-        label.text = text
-        label.textColor = textColor
-        label.textAlignment = .center
-        label.sizeToFit()
-        label.center = CGPoint(x: containerView.center.x, y: containerView.center.y + labelOffset)
-        label.autoresizingMask = [
-            .flexibleLeftMargin, .flexibleRightMargin,
-            .flexibleTopMargin, .flexibleBottomMargin
-        ]
-        containerView.addSubview(label)
-    }
-
-    return containerView
 }
 
 // MARK: - モディファイア
@@ -99,7 +46,7 @@ struct UIActivityIndicatorModifier: ViewModifier {
                 if isVisible {
                     showActivityIndicator()
                 } else {
-                    removeActivityIndicator()
+                    removeIndicator()
                 }
             }
     }
@@ -108,7 +55,7 @@ struct UIActivityIndicatorModifier: ViewModifier {
         guard let window = getKeyWindow() else { return }
 
         // 既存のコンテナビューがある場合は削除する
-        removeActivityIndicator()
+        removeIndicator()
 
         let indicatorView = createNVActivityIndicatorView(type: type, color: foregroundColor)
         let containerView = createContainerView(
@@ -122,44 +69,6 @@ struct UIActivityIndicatorModifier: ViewModifier {
 
         window.addSubview(containerView)
     }
-
-    private func removeActivityIndicator() {
-        guard let window = getKeyWindow() else { return }
-
-        if let containerView = window.subviews.first(where: { $0 is IndicatorOverlayContainerView }) {
-            containerView.removeFromSuperview()
-        }
-    }
-}
-
-// MARK: - ビュー拡張
-
-public extension View {
-    /// アクティビティインジケーターをオーバーレイ表示するカスタムモディファイア
-    /// - Parameters:
-    ///   - isVisible: アクティビティインジケーターの表示フラグ
-    ///   - type: インジケーターのタイプ
-    ///   - text: インジケーター下に表示するテキスト
-    ///   - backgroundColor: 背景色と透明度を指定
-    ///   - foregroundColor: インジケーターとテキストの色を指定
-    /// - Returns: 修正されたビュー
-    func activityIndicator(
-        isVisible: Bool,
-        type: NVActivityIndicatorType = .lineSpinFadeLoader,
-        text: String? = nil,
-        backgroundColor: UIColor = UIColor.clear,
-        foregroundColor: UIColor = .gray
-    ) -> some View {
-        modifier(
-            UIActivityIndicatorModifier(
-                isVisible: isVisible,
-                type: type,
-                text: text,
-                backgroundColor: backgroundColor,
-                foregroundColor: foregroundColor
-            )
-        )
-    }
 }
 
 // MARK: - プレビュー
@@ -169,7 +78,7 @@ public extension View {
     #Preview {
         @Previewable @State var isVisible = false
 
-        return TabView {
+        TabView {
             NavigationView {
                 VStack {
                     Image(systemName: "1.circle.fill")
