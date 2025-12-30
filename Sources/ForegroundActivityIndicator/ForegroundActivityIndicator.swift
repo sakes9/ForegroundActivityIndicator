@@ -5,26 +5,87 @@ import NVActivityIndicatorView
 import SwiftUI
 import UIKit
 
-// MARK: - アクティビティーインジケーター
+// MARK: - コンテナビュー
+
+private class IndicatorOverlayContainerView: UIView {}
+
+// MARK: - 純粋関数
+
+private func getKeyWindow() -> UIWindow? {
+    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+          let window = windowScene.windows.first(where: { $0.isKeyWindow })
+    else {
+        return nil
+    }
+    return window
+}
+
+private func createNVActivityIndicatorView(
+    type: NVActivityIndicatorType,
+    color: UIColor
+) -> NVActivityIndicatorView {
+    let indicator = NVActivityIndicatorView(
+        frame: CGRect(x: 0, y: 0, width: 50, height: 50),
+        type: type,
+        color: color
+    )
+    indicator.startAnimating()
+    return indicator
+}
+
+private func createContainerView(
+    frame: CGRect,
+    indicatorView: UIView,
+    labelOffset: CGFloat,
+    text: String?,
+    textColor: UIColor,
+    backgroundColor: UIColor
+) -> IndicatorOverlayContainerView {
+    let containerView = IndicatorOverlayContainerView(frame: frame)
+    containerView.backgroundColor = backgroundColor
+    containerView.isUserInteractionEnabled = true
+    containerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
+    indicatorView.center = containerView.center
+    indicatorView.autoresizingMask = [
+        .flexibleLeftMargin, .flexibleRightMargin,
+        .flexibleTopMargin, .flexibleBottomMargin
+    ]
+    containerView.addSubview(indicatorView)
+
+    if let text {
+        let label = UILabel()
+        label.text = text
+        label.textColor = textColor
+        label.textAlignment = .center
+        label.sizeToFit()
+        label.center = CGPoint(x: containerView.center.x, y: containerView.center.y + labelOffset)
+        label.autoresizingMask = [
+            .flexibleLeftMargin, .flexibleRightMargin,
+            .flexibleTopMargin, .flexibleBottomMargin
+        ]
+        containerView.addSubview(label)
+    }
+
+    return containerView
+}
+
+// MARK: - モディファイア
 
 struct UIActivityIndicatorModifier: ViewModifier {
-    private var isVisible: Bool // アクティビティインジケーターの表示フラグ
-    private let type: NVActivityIndicatorType // スタイル
-    private let text: String? // 表示するテキスト
-    private let backgroundColor: UIColor // 背景色
-    private let foregroundColor: UIColor // インジケーターとテキストの色
-
-    /// イニシャライザ
-    /// - Parameters:
-    ///   - isVisible: インジケーター表示フラグ
-    ///   - type: タイプ
-    ///   - text: インジケーター下の表示テキスト
-    ///   - backgroundColor: 背景色
-    ///   - foregroundColor: インジケーターとテキストの色
+    private let isVisible: Bool
+    private let type: NVActivityIndicatorType
+    private let text: String?
+    private let backgroundColor: UIColor
+    private let foregroundColor: UIColor
 
     init(
-        isVisible: Bool, type: NVActivityIndicatorType, text: String?, backgroundColor: UIColor,
-        foregroundColor: UIColor) {
+        isVisible: Bool,
+        type: NVActivityIndicatorType,
+        text: String?,
+        backgroundColor: UIColor,
+        foregroundColor: UIColor
+    ) {
         self.isVisible = isVisible
         self.type = type
         self.text = text
@@ -43,83 +104,33 @@ struct UIActivityIndicatorModifier: ViewModifier {
             }
     }
 
-    /// アクティビティインジケーターを表示するメソッド
-    /// `isVisible`が`true`の場合に呼び出され、アクティビティインジケーターを表示します。
     private func showActivityIndicator() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first(where: { $0.isKeyWindow })
-        else {
-            return
-        }
+        guard let window = getKeyWindow() else { return }
 
         // 既存のコンテナビューがある場合は削除する
-        if let existingContainerView = window.subviews.first(where: {
-            $0 is UIActivityIndicatorOverlayContainerView
-        }) {
-            existingContainerView.removeFromSuperview()
-        }
+        removeActivityIndicator()
 
-        // コンテナビューを作成
-        let containerView = UIActivityIndicatorOverlayContainerView(
-            frame: window.bounds)
-        containerView.backgroundColor = backgroundColor // 外部から設定された背景色と透明度を適用
-        containerView.isUserInteractionEnabled = true // ユーザーインタラクションをブロック
-        containerView.autoresizingMask = [.flexibleWidth, .flexibleHeight] // デバイス回転時に自動調整
-
-        // アクティビティインジケーターを作成
-        let activityIndicator = NVActivityIndicatorView(
-            frame: .init(x: 0, y: 0, width: 50, height: 50),
-            type: type,
-            color: foregroundColor)
-        activityIndicator.startAnimating()
-
-        // アクティビティインジケーターの位置を設定
-        activityIndicator.center = containerView.center
-        activityIndicator.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin] // 中央配置を維持
-
-        // コンテナビューにアクティビティインジケーターを追加
-        containerView.addSubview(activityIndicator)
-
-        // テキストラベルを作成
-        if text != nil {
-            let label = UILabel()
-            label.text = text
-            label.textColor = foregroundColor
-            label.textAlignment = .center
-            label.sizeToFit()
-
-            // ラベルの位置を設定（インジケーターの下に配置）
-            label.center = CGPoint(x: containerView.center.x, y: containerView.center.y + 40)
-            label.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin] // 中央配置を維持
-
-            // コンテナビューにラベルを追加
-            containerView.addSubview(label)
-        }
+        let indicatorView = createNVActivityIndicatorView(type: type, color: foregroundColor)
+        let containerView = createContainerView(
+            frame: window.bounds,
+            indicatorView: indicatorView,
+            labelOffset: 40,
+            text: text,
+            textColor: foregroundColor,
+            backgroundColor: backgroundColor
+        )
 
         window.addSubview(containerView)
     }
 
-    /// アクティビティインジケーターを削除するメソッド
-    /// `isVisible`が`false`の場合に呼び出され、アクティビティインジケーターを削除する。
     private func removeActivityIndicator() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first(where: { $0.isKeyWindow })
-        else {
-            return
-        }
+        guard let window = getKeyWindow() else { return }
 
-        // コンテナビューを削除
-        if let containerView = window.subviews.first(where: {
-            $0 is UIActivityIndicatorOverlayContainerView
-        }) {
+        if let containerView = window.subviews.first(where: { $0 is IndicatorOverlayContainerView }) {
             containerView.removeFromSuperview()
         }
     }
 }
-
-// MARK: - コンテナビュー
-
-class UIActivityIndicatorOverlayContainerView: UIView {}
 
 // MARK: - ビュー拡張
 
@@ -130,21 +141,24 @@ public extension View {
     ///   - type: インジケーターのタイプ
     ///   - text: インジケーター下に表示するテキスト
     ///   - backgroundColor: 背景色と透明度を指定
-    ///   - indicatorColor: インジケーターの色を指定
+    ///   - foregroundColor: インジケーターとテキストの色を指定
     /// - Returns: 修正されたビュー
     func activityIndicator(
         isVisible: Bool,
         type: NVActivityIndicatorType = .lineSpinFadeLoader,
         text: String? = nil,
         backgroundColor: UIColor = UIColor.clear,
-        foregroundColor: UIColor = .gray) -> some View {
+        foregroundColor: UIColor = .gray
+    ) -> some View {
         modifier(
             UIActivityIndicatorModifier(
                 isVisible: isVisible,
                 type: type,
                 text: text,
                 backgroundColor: backgroundColor,
-                foregroundColor: foregroundColor))
+                foregroundColor: foregroundColor
+            )
+        )
     }
 }
 
@@ -172,7 +186,8 @@ public extension View {
                     type: .ballSpinFadeLoader,
                     text: "ローディング...",
                     backgroundColor: .gray.withAlphaComponent(0.5),
-                    foregroundColor: .white)
+                    foregroundColor: .white
+                )
                 .onAppear {
                     isVisible = true
                 }
